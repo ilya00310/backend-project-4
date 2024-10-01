@@ -4,8 +4,8 @@ import { getLogicDataDownload } from './logicData.js';
 import { getLogicPicturesDownload } from './logicPictures.js';
 
 export class WebSite {
-  downloadDataWebSite(link, pathNewFile) {
-    return getLogicDataDownload(link, pathNewFile);
+  downloadDataWebSite(link, pathNewFile, nameNewDir, webSite) {
+    return getLogicDataDownload(link, pathNewFile, nameNewDir, webSite);
   }
 
   downloadPicture(pathFile, nameNewDir, link) {

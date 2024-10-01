@@ -1,6 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 /* eslint-disable class-methods-use-this */
-import { logicDataDownload } from './fakeLogicData.js';
+import { getLogicDataDownload } from './fakeLogicData.js';
 import { getLogicPicturesDownload } from '../src/logicPictures.js';
 
 export class FakeWebsite {
@@ -8,11 +8,11 @@ export class FakeWebsite {
     this.data = data;
   }
 
-  downloadDataWebSite(link, pathForDownload) {
-    return logicDataDownload(link, pathForDownload, this);
+  downloadDataWebSite(link, pathNewFile, nameNewDir, webSite) {
+    return getLogicDataDownload(link, pathNewFile, nameNewDir, webSite);
   }
 
-  downloadPicture(pathFile, pathDir, link) {
-    return getLogicPicturesDownload(pathFile, pathDir, link);
+  downloadPicture(pathFile, nameNewDir, link) {
+    return getLogicPicturesDownload(pathFile, nameNewDir, link);
   }
 }
