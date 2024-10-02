@@ -5,7 +5,7 @@ import path from 'path';
 
 const { promises: fsp } = fs;
 
-export const getLogicDataDownload = (link, pathNewFile, nameNewDir, webSite) => {
+export const getLogicDataDownload = (link, pathNewFile) => {
   const nameDir = path.join(pathNewFile, '..');
 
   return axios.get(link)
@@ -13,6 +13,5 @@ export const getLogicDataDownload = (link, pathNewFile, nameNewDir, webSite) => 
       .then(() => fsp.writeFile(pathNewFile, data, 'utf-8'))
       .catch(() => {
         throw new Error('don\'t exist direction');
-      }))
-    .finally(() => webSite.downloadPicture(pathNewFile, nameNewDir, link));
+      }));
 };

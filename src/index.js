@@ -1,11 +1,13 @@
 /* eslint-disable import/prefer-default-export */
 import path from 'path';
-import { WebSite } from './webSite.js';
 import { getURL } from './utils.js';
+import { getLogicDataDownload } from './logicData.js';
+import { getLogicPicturesDownload } from './logicPictures.js';
 
-export const getGeneralLogic = (link, pathDirectory, webSite = new WebSite()) => {
+export const getGeneralLogic = (link, pathDirectory) => {
   const pathNewFile = path.join(pathDirectory, getURL(link));
   const nameNewDir = getURL(link, '_files');
-  return webSite.downloadDataWebSite(link, pathNewFile, nameNewDir, webSite)
+  return getLogicDataDownload(link, pathNewFile)
+    .then(() => getLogicPicturesDownload(link, pathNewFile, nameNewDir))
     .then(() => pathNewFile);
 };
