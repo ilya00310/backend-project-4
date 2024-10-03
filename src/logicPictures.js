@@ -6,34 +6,41 @@ import axios from 'axios';
 import { convertStr } from './utils.js';
 
 const { promises: fsp } = fs;
-const getPathImg = (url) => (path.extname(url.pathname) ? path.join(url.host, url.pathname) : `${path.join(url.host, url.pathname)}.png`);
+const getPathImg = (url) => (path.extname(url.pathname) ? path.join(url.host, url.pathname) : `${path.join(url.host, url.pathname)}.html`);
 
-export const getLogicPicturesDownload = (link, pathNewFile, nameNewDir) => {
+const changedItems = (tag, attribute, linkURL, pathNewFile, nameNewDir, loadFile) => {
+  const itemFilter = Object.values(loadFile(`${tag}`)).filter((item) => item.attribs);
   const pathNewDir = path.join(pathNewFile, '..', nameNewDir);
-
-  return fsp.mkdir(pathNewDir)
-    .then(() => fsp.readFile(pathNewFile, 'utf-8'))
-    .then((data) => {
-      const $ = cheerio.load(data);
-      const dataPicturesFilter = Object.values($('body').find('img')).filter((item) => item.attribs);
-      const promises = dataPicturesFilter.map((item) => {
-        const linkURL = new URL(link);
-        const newURL = new URL(item.attribs.src, linkURL.origin);
-        const pathImg = getPathImg(newURL);
-        const nameFilePicture = convertStr(pathImg, /\/|\.(?=.*[.])/g);
-        // if (newURL.host !== linkURL.host) {
-        //   return Promise.resolve();
-        // }
-        // console.log(newURL.href)
-        return axios.get(newURL.href, { responseType: 'arraybuffer' })
-          .then((loadImg) => fsp.writeFile(path.join(pathNewDir, nameFilePicture), loadImg.data, 'utf-8'))
-          .then(() => {
-            $(`img[src = "${item.attribs.src}"]`).attr('src', path.join(nameNewDir, nameFilePicture));
-            return fsp.writeFile(pathNewFile, $.html(), 'utf-8')
-              .then(() => Promise.resolve());
-          });
+  return itemFilter.map((item) => {
+    const newURL = new URL(item.attribs[`${attribute}`], linkURL.origin);
+    const pathImg = getPathImg(newURL);
+    const nameFilePicture = convertStr(pathImg, /\/|\.(?=.*[.])/g);
+    if (newURL.host !== linkURL.host) {
+      return Promise.resolve();
+    }
+    return axios.get(newURL.href, { responseType: 'arraybuffer' })
+      .then((loadImg) => fsp.writeFile(path.join(pathNewDir, nameFilePicture), loadImg.data, 'utf-8'))
+      .then(() => {
+        loadFile(`${tag}[${attribute} = "${item.attribs[`${attribute}`]}"]`).attr(`${attribute}`, path.join(nameNewDir, nameFilePicture));
+        return Promise.resolve();
       });
-      return Promise.all(promises)
-        .then(() => Promise.resolve());
+  });
+};
+
+export const getLogicPicturesDownload = async (link, pathNewFile, nameNewDir) => {
+  const pathNewDir = path.join(pathNewFile, '..', nameNewDir);
+  return fsp.mkdir(pathNewDir)
+    .then(() => {
+      const linkURL = new URL(link);
+      return fsp.readFile(pathNewFile, 'utf-8')
+        .then((data) => {
+          const $ = cheerio.load(data);
+          const promisesImg = changedItems('img', 'src', linkURL, pathNewFile, nameNewDir, $);
+          const promisesLink = changedItems('link', 'href', linkURL, pathNewFile, nameNewDir, $);
+          const promisesScript = changedItems('script', 'src', linkURL, pathNewFile, nameNewDir, $);
+          return Promise.all([...promisesImg, ...promisesLink, ...promisesScript])
+            .then(() => fsp.writeFile(pathNewFile, $.html(), 'utf-8'))
+            .then(() => Promise.resolve());
+        });
     });
 };
