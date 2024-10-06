@@ -7,7 +7,6 @@ import debug from 'debug';
 import getGeneralLogic from '../index.js';
 import { getURL } from '../src/utils.js';
 
-
 const { promises: fsp } = fs;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const getFixturePath = (fileName) => path.resolve(__dirname, '..', '__fixtures__', fileName);

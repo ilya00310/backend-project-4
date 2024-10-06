@@ -32,7 +32,7 @@
     "axios-debug-log": "^1.0.0",
     "cheerio": "^1.0.0",
     "debug": "^4.3.7",
-    "lister": "^1.0.3",
+    "listr": "^0.14.3",
     "path": "^0.12.7",
     "simple-git-hooks": "^2.11.1"
   }

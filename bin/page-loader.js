@@ -11,8 +11,8 @@ program
   .option('-o, --output [dir]', 'output dir', process.cwd())
   .action((url, options) => {
     console.log(url);
-    getGeneralLogic(url, options.output)
-      .then((newPath) => {
+    return getGeneralLogic(url, options.output)
+      .catch((newPath) => {
         console.log(newPath);
       });
   });
