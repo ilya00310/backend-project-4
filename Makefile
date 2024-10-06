@@ -28,3 +28,7 @@ tests:
 	npm run test
 make publish:
 	npm publish --dry-run
+make debug-test:
+	DEBUG=page-loader* make test
+make debug-nock:
+	DEBUG=nock.* make test

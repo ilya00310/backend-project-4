@@ -1,17 +1,21 @@
 /* eslint-disable import/prefer-default-export */
-import axios from 'axios';
+import { createRequire } from 'module';
 import fs from 'fs';
-import path from 'path';
+import { defaultDebug } from './utils.js';
 
 const { promises: fsp } = fs;
 
-export const getLogicDataDownload = (link, pathNewFile) => {
-  const nameDir = path.join(pathNewFile, '..');
-
+export const getLogicDataDownload = (link, pathNewFile, pathDirNewFile) => {
+  const require = createRequire(import.meta.url);
+  require('axios-debug-log');
+  const axios = require('axios');
   return axios.get(link)
-    .then(({ data }) => fsp.stat(nameDir)
-      .then(() => fsp.writeFile(pathNewFile, data, 'utf-8'))
-      .catch(() => {
-        throw new Error('don\'t exist direction');
+    .then(({ data }) => fsp.access(pathDirNewFile, fs.constants.R_OK)
+      .then(() => {
+        defaultDebug('dataFile %s ', data);
+        return fsp.writeFile(pathNewFile, data, 'utf-8');
+      })
+      .catch((err) => {
+        throw new Error(err);
       }));
 };

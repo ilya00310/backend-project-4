@@ -10,6 +10,7 @@ program
   .argument('<url>')
   .option('-o, --output [dir]', 'output dir', process.cwd())
   .action((url, options) => {
+    console.log(url);
     getGeneralLogic(url, options.output)
       .then((newPath) => {
         console.log(newPath);
