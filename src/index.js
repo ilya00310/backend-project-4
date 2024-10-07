@@ -18,7 +18,7 @@ export const getGeneralLogic = (link, pathDirectory = process.cwd()) => {
       return getOutputError(err, pathNewFile, pathDirNewFile)
         .then((correctErr) => {
           console.error(correctErr);
-          throw new Error(correctErr);
+          throw new Error();
         });
     });
 };
