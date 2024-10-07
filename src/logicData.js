@@ -14,5 +14,8 @@ export const getLogicDataDownload = (link, pathNewFile, pathDirNewFile) => {
       .then(() => {
         defaultDebug('dataFile %s ', data);
         return fsp.writeFile(pathNewFile, data, 'utf-8');
+      })
+      .catch((err) => {
+        throw new Error(err);
       }));
 };
