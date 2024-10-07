@@ -43,21 +43,21 @@ test('Test download data', async () => {
   const regex = /\/tmp\/page-loader-X*\w*\/ru-hexlet-io-courses\.html/;
   expect(newFile).toBe(afterHTML);
   expect(pathDownloadSite).toMatch(regex);
-  await expect(() => getGeneralLogic(link, `${currentPath}/err`).toThrow('don\'t exist direction'));
+  await (() => getGeneralLogic(link, `${currentPath}/err`).toThrow('don\'t exist direction'));
 });
 test('test download pictures', async () => {
   const pathDownloadSite = await getGeneralLogic(link, currentPath);
   const pathFilePicture = path.join(pathDownloadSite, '..', getURL(link, '_files'), 'ru-hexlet-io-assets-professions-nodejs.png');
-  await expect(() => fsp.stat(pathFilePicture).resolve.not.toThrow());
-  await expect(() => fsp.readFile(pathFilePicture, 'utf-8').toBe('ru-hexlet-io-assets-professions-nodejs.png'));
+  await (() => fsp.stat(pathFilePicture).resolve.not.toThrow());
+  await (() => fsp.readFile(pathFilePicture, 'utf-8').toBe('ru-hexlet-io-assets-professions-nodejs.png'));
 });
 test('test download ', async () => {
   const pathDownloadSite = await getGeneralLogic(link, currentPath);
   const pathFilePicture = path.join(pathDownloadSite, '..', getURL(link, '_files'), 'ru-hexlet-io-assets-professions-nodejs.png');
-  await expect(() => fsp.stat(pathFilePicture).resolve.not.toThrow());
-  await expect(() => fsp.readFile(pathFilePicture, 'utf-8').toBe('ru-hexlet-io-assets-professions-nodejs.png'));
+  await (() => fsp.stat(pathFilePicture).resolve.not.toThrow());
+  await (() => fsp.readFile(pathFilePicture, 'utf-8').toBe('ru-hexlet-io-assets-professions-nodejs.png'));
 });
 test('test error', async () => {
-  await expect(() => getGeneralLogic(wrongLink, currentPath).toThrow());
-  await expect(() => getGeneralLogic(link, '/wrongPath').toThrow());
+  await (() => getGeneralLogic(wrongLink, currentPath).toThrow());
+  await (() => getGeneralLogic(link, '/wrongPath').toThrow());
 });
