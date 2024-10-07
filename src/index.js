@@ -6,8 +6,6 @@ import { getLogicPicturesDownload } from './logicPictures.js';
 import { getOutputError } from './logicOutputError.js';
 
 export const getGeneralLogic = (link, pathDirectory) => {
-  console.log(link);
-  console.log(pathDirectory, typeof (pathDirectory));
   const pathNewFile = path.join(pathDirectory, getURL(link));
   const pathDirNewFile = path.join(pathNewFile, '..');
   const nameNewDir = getURL(link, '_files');
