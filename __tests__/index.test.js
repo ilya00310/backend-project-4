@@ -16,6 +16,8 @@ let expectedHTML;
 let afterHTML;
 let expectedImg;
 let currentPath;
+let pathNewFile;
+let pathCloseDir;
 const link = 'https://ru.hexlet.io/courses';
 const wrongLink = 'https://ru.hexlet.io/cou';
 const nockDebug = debug('page-loader: nock.');
@@ -25,6 +27,11 @@ const getNock = (pathData, expectedData, status = 200, host = /ru\.hexlet\.io/) 
   .reply(status, expectedData, nockDebug('request %s %s ', 'GET', link), nockDebug('status %d %s', 200, 'OK'));
 beforeEach(async () => {
   currentPath = await fsp.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+  pathNewFile = path.join(currentPath, 'newFile');
+  await fsp.writeFile(pathNewFile, '', 'utf-8');
+  pathCloseDir = path.join(currentPath, 'closeDir');
+  await fsp.mkdir(pathCloseDir, { recursive: true });
+  await fsp.chmod(pathCloseDir, 0o400);
 });
 beforeAll(async () => {
   expectedHTML = await fsp.readFile(getFixturePath('file1.txt'), 'utf-8');
@@ -36,22 +43,50 @@ beforeAll(async () => {
   getNock(/\/packs\/js\/runtime.js/);
   getNock(/\/cou/, expectedHTML, 300);
 });
-
-test('Download data', async () => {
-  const pathDownloadSite = await getGeneralLogic(link, currentPath);
-  const newFile = await fsp.readFile(pathDownloadSite, 'utf-8');
-  const regex = /\/tmp\/page-loader-X*\w*\/ru-hexlet-io-courses\.html/;
-  expect(newFile).toBe(afterHTML);
-  expect(pathDownloadSite).toMatch(regex);
-  expect(() => { getGeneralLogic(link, `${currentPath}/err`).toThrow('don\'t exist direction'); });
-});
-test('Download pictures', async () => {
-  const pathDownloadSite = await getGeneralLogic(link, currentPath);
-  const pathFilePicture = path.join(pathDownloadSite, '..', getURL(link, '_files'), 'ru-hexlet-io-assets-professions-nodejs.png');
-  expect(() => fsp.stat(pathFilePicture).resolve.not.toThrow());
-  expect(() => fsp.readFile(pathFilePicture, 'utf-8').toBe('ru-hexlet-io-assets-professions-nodejs.png'));
-});
-test('error', async () => {
-  expect(() => getGeneralLogic(wrongLink, currentPath).toThrow());
-  expect(() => getGeneralLogic(link, '/wrongPath').toThrow());
+describe('page-loader', () => {
+  test('Check success', async () => {
+    const pathDownloadSite = await getGeneralLogic(link, currentPath);
+    const newFile = await fsp.readFile(pathDownloadSite, 'utf-8');
+    const regex = /\/tmp\/page-loader-X*\w*\/ru-hexlet-io-courses\.html/;
+    const pathFilePicture = path.join(pathDownloadSite, '..', getURL(link, '_files'), 'ru-hexlet-io-assets-professions-nodejs.png');
+    fsp.stat(pathFilePicture).catch((err) => expect(err).toBeUndefined());
+    expect(newFile).toBe(afterHTML);
+    expect(pathDownloadSite).toMatch(regex);
+    fsp.readFile(pathFilePicture, null).then((fileInfo) => expect(fileInfo).toEqual(expectedImg));
+  });
+  test('fsdf', async () => {
+    try {
+      await fsp.writeFile(pathNewFile, '', 'utf-8');
+      await expect(getGeneralLogic(link, pathNewFile));
+    } catch (error) {
+      expect(error).toThrow();
+    }
+    try {
+      await expect(getGeneralLogic(wrongLink, currentPath));
+    } catch (error) {
+      expect(error).toThrow();
+    }
+    try {
+      await expect(getGeneralLogic(link, '/wrongPath'));
+    } catch (error) {
+      expect(error).toThrow();
+    }
+    try {
+      await expect(getGeneralLogic(link, 'pathCloseDir'));
+    } catch (error) {
+      expect(error).toThrow();
+    }
+  });
+  // test.each([
+  //   [wrongLink, currentPath],
+  //   [link, '/wrongPath'],
+  //   [link, pathNewFile],
+  //   [link, pathCloseDir, link],
+  // ])('.check error(%s %s)', async (currentLink, pathDir) => {
+  //   try {
+  //     await expect(getGeneralLogic(currentLink, pathDir));
+  //   } catch (error) {
+  //     expect(error).toThrow();
+  //   }
+  // });
 });

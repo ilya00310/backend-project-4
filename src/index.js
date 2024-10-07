@@ -5,9 +5,8 @@ import { getLogicDataDownload } from './logicData.js';
 import { getLogicPicturesDownload } from './logicPictures.js';
 import { getOutputError } from './logicOutputError.js';
 
-export const getGeneralLogic = (link, pathDirectory = process.cwd()) => {
-  const pathNewFile = path.join(pathDirectory, getURL(link));
-  const pathDirNewFile = path.join(pathNewFile, '..');
+export const getGeneralLogic = (link, pathDirNewFile = process.cwd()) => {
+  const pathNewFile = path.join(pathDirNewFile, getURL(link));
   const nameNewDir = getURL(link, '_files');
   defaultDebug('link %s', link);
   return getLogicDataDownload(link, pathNewFile, pathDirNewFile)
