@@ -51,12 +51,6 @@ test('test download pictures', async () => {
   await (() => fsp.stat(pathFilePicture).resolve.not.toThrow());
   await (() => fsp.readFile(pathFilePicture, 'utf-8').toBe('ru-hexlet-io-assets-professions-nodejs.png'));
 });
-test('test download ', async () => {
-  const pathDownloadSite = await getGeneralLogic(link, currentPath);
-  const pathFilePicture = path.join(pathDownloadSite, '..', getURL(link, '_files'), 'ru-hexlet-io-assets-professions-nodejs.png');
-  await (() => fsp.stat(pathFilePicture).resolve.not.toThrow());
-  await (() => fsp.readFile(pathFilePicture, 'utf-8').toBe('ru-hexlet-io-assets-professions-nodejs.png'));
-});
 test('test error', async () => {
   await (() => getGeneralLogic(wrongLink, currentPath).toThrow());
   await (() => getGeneralLogic(link, '/wrongPath').toThrow());
