@@ -9,11 +9,9 @@ program
   .version('0.0.1')
   .argument('<url>')
   .option('-o, --output [dir]', 'output dir', process.cwd())
-  .action((url, options) => {
-    console.log(url);
-    return getGeneralLogic(url, options.output)
-      .catch((newPath) => {
-        console.log(newPath);
-      });
-  });
+  .action((url, options) => getGeneralLogic(url, options.output)
+    .then((newPath) => {
+      console.log(newPath);
+      process.exit();
+    }));
 program.parseAsync();

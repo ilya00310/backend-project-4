@@ -18,7 +18,6 @@ export const getGeneralLogic = (link, pathDirectory) => {
       return getOutputError(err, pathNewFile, pathDirNewFile)
         .then((correctErr) => {
           console.error(correctErr);
-          process.exit(1);
         });
     });
 };
