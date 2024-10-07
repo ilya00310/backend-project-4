@@ -12,9 +12,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const getFixturePath = (fileName) => path.resolve(__dirname, '..', '__fixtures__', fileName);
 
 nock.disableNetConnect();
-const expectedHTML = await fsp.readFile(getFixturePath('file1.txt', 'utf-8'));
-const afterHTML = await fsp.readFile(getFixturePath('file2.txt'), 'utf-8');
-const expectedImg = await fsp.readFile(getFixturePath('assets/professions/nodejs.png', null));
+let expectedHTML;
+let afterHTML;
+let expectedImg;
 let currentPath;
 const link = 'https://ru.hexlet.io/courses';
 const wrongLink = 'https://ru.hexlet.io/cou';
@@ -26,7 +26,10 @@ const getNock = (pathData, expectedData, status = 200, host = /ru\.hexlet\.io/) 
 beforeEach(async () => {
   currentPath = await fsp.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
 });
-beforeAll(() => {
+beforeAll(async () => {
+  expectedHTML = await fsp.readFile(getFixturePath('file1.txt'), 'utf-8');
+  afterHTML = await fsp.readFile(getFixturePath('file2.txt'), 'utf-8');
+  expectedImg = await fsp.readFile(getFixturePath('assets/professions/nodejs.png'), null);
   getNock(/\/courses/, expectedHTML);
   getNock(/\/assets\/professions\/nodejs.png/, expectedImg);
   getNock(/\/assets\/application.css/, expectedHTML);
