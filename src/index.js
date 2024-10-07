@@ -17,7 +17,7 @@ export const getGeneralLogic = (link, pathDirectory) => {
       defaultDebug('direction %s', err);
       return getOutputError(err, pathNewFile, pathDirNewFile)
         .then((correctErr) => {
-          console.error(correctErr);
+          throw console.error(correctErr);
         });
     });
 };
