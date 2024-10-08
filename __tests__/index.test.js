@@ -49,37 +49,26 @@ describe('page-loader', () => {
     const newFile = await fsp.readFile(pathDownloadSite, 'utf-8');
     const regex = /\/tmp\/page-loader-X*\w*\/ru-hexlet-io-courses\.html/;
     const pathFilePicture = path.join(pathDownloadSite, '..', getURL(link, '_files'), 'ru-hexlet-io-assets-professions-nodejs.png');
-    fsp.stat(pathFilePicture).catch((err) => expect(err).toBeUndefined());
+    await (() => fsp.stat(pathFilePicture).not.toBeUndefined());
     expect(newFile).toBe(afterHTML);
     expect(pathDownloadSite).toMatch(regex);
-    fsp.readFile(pathFilePicture, null).then((fileInfo) => expect(fileInfo).toEqual(expectedImg));
+    await (() => fsp.readFile(pathFilePicture, null).toEqual(expectedImg));
   });
   test('page-loader: error', async () => {
-    try {
-      await fsp.writeFile(pathNewFile, '', 'utf-8');
-      await expect(getGeneralLogic(link, pathNewFile));
-    } catch (error) {
-      expect(error).toThrow();
-    }
-    try {
-      await expect(getGeneralLogic('https://ru.hexlet.io/404', currentPath));
-    } catch (error) {
-      expect(error).toThrow();
-    }
-    try {
-      await expect(getGeneralLogic('https://ru.hexlet.io/500', currentPath));
-    } catch (error) {
-      expect(error).toThrow();
-    }
-    try {
-      await expect(getGeneralLogic(link, '/wrongPath'));
-    } catch (error) {
-      expect(error).toThrow();
-    }
-    try {
-      await expect(getGeneralLogic(link, pathCloseDir));
-    } catch (error) {
-      expect(error).toThrow();
-    }
+    await fsp.writeFile(pathNewFile, '', 'utf-8');
+    getGeneralLogic(link, pathNewFile)
+      .catch((error) => expect(error).toThrow());
+
+    getGeneralLogic('https://ru.hexlet.io/404', currentPath)
+      .catch((error) => expect(error).toThrow());
+
+    getGeneralLogic('https://ru.hexlet.io/500', currentPath)
+      .catch((error) => expect(error).toThrow());
+
+    getGeneralLogic(link, '/wrongPath')
+      .catch((error) => expect(error).toThrow());
+
+    getGeneralLogic(link, pathCloseDir)
+      .catch((error) => expect(error).toThrow());
   });
 });
