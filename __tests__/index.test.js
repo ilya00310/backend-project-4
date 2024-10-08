@@ -19,7 +19,6 @@ let currentPath;
 let pathNewFile;
 let pathCloseDir;
 const link = 'https://ru.hexlet.io/courses';
-const wrongLink = 'https://ru.hexlet.io/cou';
 const nockDebug = debug('page-loader: nock.');
 const getNock = (pathData, expectedData, status = 200, host = /ru\.hexlet\.io/) => nock(host)
   .get(pathData)
@@ -41,7 +40,8 @@ beforeAll(async () => {
   getNock(/\/assets\/professions\/nodejs.png/, expectedImg);
   getNock(/\/assets\/application.css/, expectedHTML);
   getNock(/\/packs\/js\/runtime.js/);
-  getNock(/\/cou/, expectedHTML, 300);
+  getNock(/\/404/, expectedHTML, 404);
+  getNock(/\/500/, expectedHTML, 500);
 });
 describe('page-loader', () => {
   test('Check success', async () => {
@@ -54,39 +54,19 @@ describe('page-loader', () => {
     expect(pathDownloadSite).toMatch(regex);
     fsp.readFile(pathFilePicture, null).then((fileInfo) => expect(fileInfo).toEqual(expectedImg));
   });
-  test('fsdf', async () => {
-    try {
-      await fsp.writeFile(pathNewFile, '', 'utf-8');
-      await expect(getGeneralLogic(link, pathNewFile));
-    } catch (error) {
-      expect(error).toThrow();
-    }
-    try {
-      await expect(getGeneralLogic(wrongLink, currentPath));
-    } catch (error) {
-      expect(error).toThrow();
-    }
-    try {
-      await expect(getGeneralLogic(link, '/wrongPath'));
-    } catch (error) {
-      expect(error).toThrow();
-    }
-    try {
-      await expect(getGeneralLogic(link, 'pathCloseDir'));
-    } catch (error) {
-      expect(error).toThrow();
-    }
+  test('page-loader error', async () => {
+    test.each([
+      ['https://ru.hexlet.io/404', currentPath],
+      ['https://ru.hexlet.io/500', currentPath],
+      [link, '/wrongPath'],
+      [link, pathNewFile],
+      [link, pathCloseDir],
+    ])('.check error(%s %s)', async (currentLink, pathDir) => {
+      try {
+        await expect(getGeneralLogic(currentLink, pathDir));
+      } catch (error) {
+        expect(error).toThrow();
+      }
+    });
   });
-  // test.each([
-  //   [wrongLink, currentPath],
-  //   [link, '/wrongPath'],
-  //   [link, pathNewFile],
-  //   [link, pathCloseDir, link],
-  // ])('.check error(%s %s)', async (currentLink, pathDir) => {
-  //   try {
-  //     await expect(getGeneralLogic(currentLink, pathDir));
-  //   } catch (error) {
-  //     expect(error).toThrow();
-  //   }
-  // });
 });

@@ -37,21 +37,19 @@ export const getLogicPicturesDownload = async (link, pathNewFile, nameNewDir) =>
   const pathNewDir = path.join(pathNewFile, '..', nameNewDir);
   defaultDebug('newPath %s', pathNewDir);
   return fsp.mkdir(pathNewDir)
-    .then(() => {
+    .then(() => fsp.readFile(pathNewFile, 'utf-8'))
+    .then((data) => {
       const linkURL = new URL(link);
-      return fsp.readFile(pathNewFile, 'utf-8')
-        .then((data) => {
-          const $ = cheerio.load(data);
-          const listrTasks = [];
-          changedItems('img', 'src', linkURL, pathNewFile, nameNewDir, $, listrTasks);
-          changedItems('img', 'src', linkURL, pathNewFile, nameNewDir, $, listrTasks);
-          changedItems('link', 'href', linkURL, pathNewFile, nameNewDir, $, listrTasks);
-          changedItems('script', 'src', linkURL, pathNewFile, nameNewDir, $, listrTasks);
-          defaultDebug('newHTML %s', $.html());
-          const a = new Listr(listrTasks, { concurrent: true });
-          return a.run()
-            .then(() => fsp.writeFile(pathNewFile, $.html(), 'utf-8'))
-            .then(() => Promise.resolve());
-        });
+      const $ = cheerio.load(data);
+      const listrTasks = [];
+      changedItems('img', 'src', linkURL, pathNewFile, nameNewDir, $, listrTasks);
+      changedItems('img', 'src', linkURL, pathNewFile, nameNewDir, $, listrTasks);
+      changedItems('link', 'href', linkURL, pathNewFile, nameNewDir, $, listrTasks);
+      changedItems('script', 'src', linkURL, pathNewFile, nameNewDir, $, listrTasks);
+      defaultDebug('newHTML %s', $.html());
+      const a = new Listr(listrTasks, { concurrent: true });
+      return a.run()
+        .then(() => fsp.writeFile(pathNewFile, $.html(), 'utf-8'))
+        .then(() => Promise.resolve());
     });
 };
