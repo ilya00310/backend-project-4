@@ -56,19 +56,10 @@ describe('page-loader', () => {
   });
   test('page-loader: error', async () => {
     await fsp.writeFile(pathNewFile, '', 'utf-8');
-    getGeneralLogic(link, pathNewFile)
-      .catch((error) => expect(error).toThrow());
-
-    getGeneralLogic('https://ru.hexlet.io/404', currentPath)
-      .catch((error) => expect(error).toThrow());
-
-    getGeneralLogic('https://ru.hexlet.io/500', currentPath)
-      .catch((error) => expect(error).toThrow());
-
-    getGeneralLogic(link, '/wrongPath')
-      .catch((error) => expect(error).toThrow());
-
-    getGeneralLogic(link, pathCloseDir)
-      .catch((error) => expect(error).toThrow());
+    await (() => getGeneralLogic(link, pathNewFile).toThrow());
+    await (() => getGeneralLogic('https://ru.hexlet.io/404', currentPath).toThrow());
+    await (() => getGeneralLogic('https://ru.hexlet.io/500', currentPath).toThrow());
+    await (() => getGeneralLogic(link, '/wrongPath').toThrow());
+    await (() => getGeneralLogic(link, pathCloseDir).toThrow());
   });
 });
