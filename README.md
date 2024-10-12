@@ -1,6 +1,6 @@
 ### Hexlet tests and linter status:
 
-[![Actions Status](https://github.com/ilya00310/backend-project-4/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/ilya00310/backend-project-4/actions)
+[![Actions Status](https://github.com/ilya00310/backend-project-4/workflows/hexlet-check/badge.svg)](https://github.com/ilya00310/backend-project-4/actions)
 
 ### GitHub Actions:
 
