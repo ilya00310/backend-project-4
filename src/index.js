@@ -12,7 +12,16 @@ export const getURL = (link, extension = '.html') => {
   return correctURL;
 };
 export const getGeneralLogic = (link, pathDirNewFile = process.cwd()) => {
-  const pathNewFile = path.join(pathDirNewFile, getURL(link));
+  let pathNewFile;
+  try {
+    pathNewFile = path.join(pathDirNewFile, getURL(link));
+  } catch (err) {
+    return Promise.reject()
+      .catch(() => {
+        console.error(`${link} invalid URL`);
+        throw new Error();
+      });
+  }
   const nameNewDir = getURL(link, '_files');
   defaultDebug('link %s', link);
   return getLogicDataDownload(link, pathNewFile, pathDirNewFile)

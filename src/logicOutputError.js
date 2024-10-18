@@ -9,7 +9,6 @@ export const getOutputError = (error, pathNewFile, pathDirNewFile) => {
     const { status } = error;
     return Promise.resolve(`status answer from ${link}: ${status}`);
   }
-
   return fsp.stat(pathNewFile)
     .then(() => `Don't have access for directory ${pathDirNewFile}`)
     .catch(() => `Directory ${pathDirNewFile} don't exist`);
