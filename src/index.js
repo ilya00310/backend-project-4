@@ -18,21 +18,19 @@ export const getGeneralLogic = (link, pathDirNewFile = process.cwd()) => {
   } catch (err) {
     return Promise.reject()
       .catch(() => {
-        console.error(`${link} invalid URL`);
-        throw new Error();
+        throw new Error(`${link} invalid URL`);
       });
   }
   const nameNewDir = getURL(link, '_files');
   defaultDebug('link %s', link);
-  return getLogicDataDownload(link, pathNewFile, pathDirNewFile)
-    .then(() => getLogicPicturesDownload(link, pathNewFile, nameNewDir))
+  return getLogicDataDownload(link, pathDirNewFile)
+    .then((data) => getLogicPicturesDownload(link, pathNewFile, nameNewDir, data))
     .then(() => pathNewFile)
     .catch((err) => {
       defaultDebug('direction %s', err);
       return getOutputError(err, pathNewFile, pathDirNewFile)
         .then((correctErr) => {
-          console.error(correctErr);
-          throw new Error();
+          throw new Error(correctErr);
         });
     });
 };

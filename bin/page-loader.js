@@ -13,5 +13,9 @@ program
     .then((newPath) => {
       console.log(newPath);
       process.exit();
-    }));
+    }))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 program.parseAsync();

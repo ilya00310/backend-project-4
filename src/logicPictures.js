@@ -9,49 +9,46 @@ import { convertStr, defaultDebug } from './utils.js';
 const { promises: fsp } = fs;
 const getPathImg = (url) => (path.extname(url.pathname) ? path.join(url.host, url.pathname) : `${path.join(url.host, url.pathname)}.html`);
 
-const changedItems = (tag, attribute, linkURL, pathNewFile, nameNewDir, loadFile, listrTasks) => {
-  const itemFilter = Object.values(loadFile(`${tag}`)).filter((item) => item.attribs);
+const changedItems = (htmlItems, linkURL, pathNewFile, nameNewDir, loadFile) => {
   const pathNewDir = path.join(pathNewFile, '..', nameNewDir);
-  return itemFilter.map((item) => {
-    const newURL = new URL(item.attribs[`${attribute}`], linkURL.origin);
-    defaultDebug('new URL %s', newURL);
-    const pathImg = getPathImg(newURL);
-    const nameFilePicture = convertStr(pathImg, /\/|\.(?=.*[.])/g);
-    if (newURL.host !== linkURL.host || !item.attribs[`${attribute}`]) {
-      return Promise.resolve();
-    }
-    listrTasks.push({
-      title: newURL.href,
-      task: () => axios.get(newURL.href, { responseType: 'arraybuffer' })
-        .then((loadImg) => fsp.writeFile(path.join(pathNewDir, nameFilePicture), loadImg.data, 'utf-8'))
-        .then(() => {
-          loadFile(`${tag}[${attribute} = "${item.attribs[`${attribute}`]}"]`).attr(`${attribute}`, path.join(nameNewDir, nameFilePicture));
-          return Promise.resolve();
-        }),
+  return htmlItems.reduce((acc, htmlItem) => {
+    const tag = htmlItem[0];
+    const attribute = htmlItem[1];
+    const itemFilter = Object.values(loadFile(`${tag}`)).filter((item) => item.attribs);
+    const newTasks = itemFilter.map((item) => {
+      const newURL = new URL(item.attribs[`${attribute}`], linkURL.origin);
+      defaultDebug('new URL %s', newURL);
+      const pathImg = getPathImg(newURL);
+      const nameFilePicture = convertStr(pathImg, /\/|\.(?=.*[.])/g);
+      if (newURL.host !== linkURL.host || !item.attribs[`${attribute}`]) {
+        return [];
+      }
+      return ([{
+        title: newURL.href,
+        task: () => axios.get(newURL.href, { responseType: 'arraybuffer' })
+          .then((loadImg) => fsp.writeFile(path.join(pathNewDir, nameFilePicture), loadImg.data, 'utf-8'))
+          .then(() => {
+            loadFile(`${tag}[${attribute} = "${item.attribs[`${attribute}`]}"]`).attr(`${attribute}`, path.join(nameNewDir, nameFilePicture));
+            return Promise.resolve();
+          }),
+      }]);
     });
-    return Promise.resolve();
-  });
+    return [...acc, ...newTasks].flat();
+  }, []);
 };
 
-export const getLogicPicturesDownload = async (link, pathNewFile, nameNewDir) => {
+export const getLogicPicturesDownload = async (link, pathNewFile, nameNewDir, data) => {
   const pathNewDir = path.join(pathNewFile, '..', nameNewDir);
   defaultDebug('newPath %s', pathNewDir);
   return fsp.mkdir(pathNewDir)
     .then(() => {
       const linkURL = new URL(link);
-      return fsp.readFile(pathNewFile, 'utf-8')
-        .then((data) => {
-          const $ = cheerio.load(data);
-          const listrTasks = [];
-          changedItems('img', 'src', linkURL, pathNewFile, nameNewDir, $, listrTasks);
-          changedItems('img', 'src', linkURL, pathNewFile, nameNewDir, $, listrTasks);
-          changedItems('link', 'href', linkURL, pathNewFile, nameNewDir, $, listrTasks);
-          changedItems('script', 'src', linkURL, pathNewFile, nameNewDir, $, listrTasks);
-          defaultDebug('newHTML %s', $.html());
-          const a = new Listr(listrTasks, { concurrent: true });
-          return a.run()
-            .then(() => fsp.writeFile(pathNewFile, $.html(), 'utf-8'))
-            .then(() => Promise.resolve());
-        });
+      const $ = cheerio.load(data);
+      const htmlItems = [['img', 'src'], ['link', 'href'], ['script', 'src']];
+      const listrTasks = changedItems(htmlItems, linkURL, pathNewFile, nameNewDir, $);
+      defaultDebug('newHTML %s', $.html());
+      const a = new Listr(listrTasks, { concurrent: true });
+      return a.run()
+        .then(() => fsp.writeFile(pathNewFile, $.html(), 'utf-8'));
     });
 };

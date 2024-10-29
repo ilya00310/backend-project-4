@@ -6,6 +6,7 @@ import nock from 'nock';
 import debug from 'debug';
 import getGeneralLogic from '../index.js';
 
+const fixturesPath = ['assets/professions/nodejs.png', 'assets/application.css', 'packs/js/runtime.json'];
 const { promises: fsp } = fs;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const getFixturePath = (fileName) => path.resolve(__dirname, '..', '__fixtures__', fileName);
@@ -21,9 +22,9 @@ const getNock = (pathData, pathExpectedFile, status = 200, encoding = 'utf-8') =
 
 beforeAll(async () => {
   getNock(/\/courses/, getFixturePath('file1.html'));
-  getNock(/\/assets\/professions\/nodejs.png/, getFixturePath('assets/professions/nodejs.png'), 200, null);
-  getNock(/\/assets\/application.css/, getFixturePath('assets/application.css'), 200, null);
-  getNock(/\/packs\/js\/runtime.js/, getFixturePath('packs/js/runtime.json'));
+  getNock(/\/assets\/professions\/nodejs.png/, getFixturePath(fixturesPath[0]), 200, null);
+  getNock(/\/assets\/application.css/, getFixturePath(fixturesPath[1]), 200, null);
+  getNock(/\/packs\/js\/runtime.js/, getFixturePath(fixturesPath[2]));
   getNock(/\/404/, getFixturePath('file1.html'), 404);
   getNock(/\/500/, getFixturePath('file1.html'), 500);
 });
@@ -38,9 +39,9 @@ describe('page-loader: success', () => {
     expect(newFile).toBe(afterHTML);
   });
   test.each([
-    ['assets/professions/nodejs.png', 'ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png'],
-    ['assets/application.css', 'ru-hexlet-io-courses_files/ru-hexlet-io-assets-application.css', 'utf-8'],
-    ['packs/js/runtime.json', 'ru-hexlet-io-courses_files/ru-hexlet-io-packs-js-runtime.js', 'utf-8'],
+    [fixturesPath[0], 'ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png'],
+    [fixturesPath[1], 'ru-hexlet-io-courses_files/ru-hexlet-io-assets-application.css', 'utf-8'],
+    [fixturesPath[2], 'ru-hexlet-io-courses_files/ru-hexlet-io-packs-js-runtime.js', 'utf-8'],
   ])('.check correct %s %s %s', async (pathFixture, pathItem, extension = null) => {
     await getGeneralLogic(link, currentPath);
     const expectedItem = await fsp.readFile(getFixturePath(pathFixture), extension);
