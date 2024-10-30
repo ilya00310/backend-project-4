@@ -49,14 +49,13 @@ describe('page-loader: success', () => {
     const newFile = await fsp.readFile(path.join(currentPath, 'ru-hexlet-io-courses.html'), 'utf-8');
     expect(newFile).toBe(afterHTML);
   });
-  test.each(fixturesInfo.filter((item) => item.itemPath)
-    .map(({ fixturePath, itemPath }) => [fixturePath, itemPath]))('.check correct %s %s %s', async (pathFixture, pathItem, extension = null) => {
-      await getGeneralLogic(link, currentPath);
-      const expectedItem = await fsp.readFile(getFixturePath(pathFixture), extension);
-      const pathFileItem = path.join(currentPath, pathItem);
-      expect(await fsp.access(pathFileItem, fs.constants.F_OK)).toBeUndefined();
-      expect(await fsp.readFile(pathFileItem, extension)).toEqual(expectedItem);
-    });
+  test.each(fixturesInfo.filter((item) => item.itemPath).map(({ fixturePath, itemPath }) => [fixturePath, itemPath]))('.check correct %s %s %s', async (pathFixture, pathItem, extension = null) => {
+    await getGeneralLogic(link, currentPath);
+    const expectedItem = await fsp.readFile(getFixturePath(pathFixture), extension);
+    const pathFileItem = path.join(currentPath, pathItem);
+    expect(await fsp.access(pathFileItem, fs.constants.F_OK)).toBeUndefined();
+    expect(await fsp.readFile(pathFileItem, extension)).toEqual(expectedItem);
+  });
 });
 describe('page-loader: error', () => {
   beforeEach(async () => {
