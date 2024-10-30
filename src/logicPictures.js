@@ -46,7 +46,6 @@ export const getLogicPicturesDownload = async (link, pathNewFile, nameNewDir, da
       const $ = cheerio.load(data);
       const htmlItems = [['img', 'src'], ['link', 'href'], ['script', 'src']];
       const listrTasks = changedItems(htmlItems, linkURL, pathNewFile, nameNewDir, $);
-      defaultDebug('newHTML %s', $.html());
       const a = new Listr(listrTasks, { concurrent: true });
       return a.run()
         .then(() => fsp.writeFile(pathNewFile, $.html(), 'utf-8'));

@@ -3,10 +3,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import os from 'os';
 import nock from 'nock';
-import debug from 'debug';
 import getGeneralLogic from '../index.js';
 
-const fixturesPath = ['assets/professions/nodejs.png', 'assets/application.css', 'packs/js/runtime.json'];
 const { promises: fsp } = fs;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const getFixturePath = (fileName) => path.resolve(__dirname, '..', '__fixtures__', fileName);
@@ -14,19 +12,32 @@ const getFixturePath = (fileName) => path.resolve(__dirname, '..', '__fixtures__
 nock.disableNetConnect();
 let currentPath;
 const link = 'https://ru.hexlet.io/courses';
-const nockDebug = debug('page-loader: nock.');
 const getNock = (pathData, pathExpectedFile, status = 200, encoding = 'utf-8') => nock(/ru\.hexlet\.io/)
   .persist()
   .get(pathData)
-  .replyWithFile(status, pathExpectedFile, { 'Content-Type': encoding }, nockDebug('request %s %s ', 'GET', link), nockDebug('status %d %s', 200, 'OK'));
+  .replyWithFile(status, pathExpectedFile, { 'Content-Type': encoding });
 
+const fixturesInfo = [
+  { regexPath: /\/courses/, fixturePath: 'file1.html' },
+  {
+    regexPath: /\/assets\/professions\/nodejs.png/, fixturePath: 'assets/professions/nodejs.png', encodingFile: null, itemPath: 'ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png',
+  },
+  {
+    regexPath: /\/assets\/application.css/, fixturePath: 'assets/application.css', encodingFile: null, encodingLink: 'utf-8', itemPath: 'ru-hexlet-io-courses_files/ru-hexlet-io-assets-application.css',
+  },
+  {
+    regexPath: /\/packs\/js\/runtime.js/, fixturePath: 'packs/js/runtime.json', encodingLink: 'utf-8', itemPath: 'ru-hexlet-io-courses_files/ru-hexlet-io-packs-js-runtime.js',
+  },
+  {
+    regexPath: /\/404/, fixturePath: 'file1.html', status: 404, linkPath: 'https://ru.hexlet.io/404',
+  },
+  {
+    regexPath: /\/500/, fixturePath: 'file1.html', status: 500, linkPath: 'https://ru.hexlet.io/500',
+  }];
 beforeAll(async () => {
-  getNock(/\/courses/, getFixturePath('file1.html'));
-  getNock(/\/assets\/professions\/nodejs.png/, getFixturePath(fixturesPath[0]), 200, null);
-  getNock(/\/assets\/application.css/, getFixturePath(fixturesPath[1]), 200, null);
-  getNock(/\/packs\/js\/runtime.js/, getFixturePath(fixturesPath[2]));
-  getNock(/\/404/, getFixturePath('file1.html'), 404);
-  getNock(/\/500/, getFixturePath('file1.html'), 500);
+  fixturesInfo.map(({
+    regexPath, fixturePath, encodingFile, status,
+  }) => getNock(regexPath, getFixturePath(fixturePath), status, encodingFile));
 });
 describe('page-loader: success', () => {
   beforeEach(async () => {
@@ -38,17 +49,14 @@ describe('page-loader: success', () => {
     const newFile = await fsp.readFile(path.join(currentPath, 'ru-hexlet-io-courses.html'), 'utf-8');
     expect(newFile).toBe(afterHTML);
   });
-  test.each([
-    [fixturesPath[0], 'ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png'],
-    [fixturesPath[1], 'ru-hexlet-io-courses_files/ru-hexlet-io-assets-application.css', 'utf-8'],
-    [fixturesPath[2], 'ru-hexlet-io-courses_files/ru-hexlet-io-packs-js-runtime.js', 'utf-8'],
-  ])('.check correct %s %s %s', async (pathFixture, pathItem, extension = null) => {
-    await getGeneralLogic(link, currentPath);
-    const expectedItem = await fsp.readFile(getFixturePath(pathFixture), extension);
-    const pathFileItem = path.join(currentPath, pathItem);
-    expect(await fsp.access(pathFileItem, fs.constants.F_OK)).toBeUndefined();
-    expect(await fsp.readFile(pathFileItem, extension)).toEqual(expectedItem);
-  });
+  test.each(fixturesInfo.filter((item) => item.itemPath)
+    .map(({ fixturePath, itemPath }) => [fixturePath, itemPath]))('.check correct %s %s %s', async (pathFixture, pathItem, extension = null) => {
+      await getGeneralLogic(link, currentPath);
+      const expectedItem = await fsp.readFile(getFixturePath(pathFixture), extension);
+      const pathFileItem = path.join(currentPath, pathItem);
+      expect(await fsp.access(pathFileItem, fs.constants.F_OK)).toBeUndefined();
+      expect(await fsp.readFile(pathFileItem, extension)).toEqual(expectedItem);
+    });
 });
 describe('page-loader: error', () => {
   beforeEach(async () => {
@@ -60,8 +68,8 @@ describe('page-loader: error', () => {
     await expect(getGeneralLogic(link, pathNewFile)).rejects.toThrow();
   });
   test.each([
-    ['https://ru.hexlet.io/404'],
-    ['https://ru.hexlet.io/500'],
+    ...fixturesInfo.filter((item) => item.linkPath)
+      .map(({ linkPath }) => [linkPath]),
     [link, '/sys'],
     ['wrongLink'],
   ])('.check exist %s %s', async (currentLink, pathForTest = currentPath) => {
