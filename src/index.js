@@ -4,26 +4,25 @@ import axios from 'axios';
 import { convertStr, defaultDebug } from './utils.js';
 import { getLogicPicturesDownload } from './logicPictures.js';
 
-export const getURL = (link, extension = '.html') => {
+const getUrlWithoutProtocol = (link) => {
   const myURL = new URL(link);
-  const URLWithoutProtocol = `${myURL.host}${myURL.pathname}`;
-  const correctURL = `${convertStr(URLWithoutProtocol)}${extension}`;
-  return correctURL;
+  return `${myURL.host}${myURL.pathname}`;
+};
+const getNameNewDir = (link, extension = '.html') => {
+  const URLWithoutProtocol = getUrlWithoutProtocol(link);
+  const nameNewDir = `${convertStr(URLWithoutProtocol)}${extension}`;
+  return nameNewDir;
 };
 export const getGeneralLogic = (link, pathDirNewFile = process.cwd()) => {
   let pathNewFile;
   try {
-    pathNewFile = path.join(pathDirNewFile, getURL(link));
+    pathNewFile = path.join(pathDirNewFile, getNameNewDir(link));
   } catch (err) {
     return Promise.reject(err);
   }
-  const nameNewDir = getURL(link, '_files');
+  const nameNewDir = getNameNewDir(link, '_files');
   defaultDebug('link %s', link);
   return axios.get(link)
     .then(({ data }) => getLogicPicturesDownload(link, pathNewFile, nameNewDir, data))
-    .then(() => pathNewFile)
-    .catch((err) => {
-      defaultDebug('direction %s', err);
-      throw new Error(err);
-    });
+    .then(() => pathNewFile);
 };
