@@ -9,64 +9,49 @@ import { convertStr, defaultDebug } from './utils.js';
 const { promises: fsp } = fs;
 const getPathImg = (url) => (path.extname(url.pathname) ? path.join(url.host, url.pathname) : `${path.join(url.host, url.pathname)}.html`);
 
-const writeItems = (htmlItems, linkURL, pathNewFile, nameNewDir, data) => {
-  const $ = cheerio.load(data);
-  const pathNewDir = path.join(pathNewFile, '..', nameNewDir);
-  return htmlItems.reduce((acc, htmlItem) => {
-    const tag = htmlItem[0];
-    const attribute = htmlItem[1];
-    const itemFilter = Object.values($(`${tag}`)).filter((item) => item.attribs);
-    const newTasks = itemFilter.map((item) => {
-      const newURL = new URL(item.attribs[`${attribute}`], linkURL.origin);
-      defaultDebug('new URL %s', newURL);
-      const pathImg = getPathImg(newURL);
-      const nameFilePicture = convertStr(pathImg, /\/|\.(?=.*[.])/g);
-      if (newURL.host !== linkURL.host || !item.attribs[`${attribute}`]) {
-        return [];
-      }
-      return ([{
-        title: newURL.href,
-        task: () => axios.get(newURL.href, { responseType: 'arraybuffer' })
-          .then((loadImg) => fsp.writeFile(path.join(pathNewDir, nameFilePicture), loadImg.data, 'utf-8'))
-          .then(() => {
-            $(`${tag}[${attribute} = "${item.attribs[`${attribute}`]}"]`).attr(`${attribute}`, path.join(nameNewDir, nameFilePicture));
-          }),
-      }]);
-    });
-    return [...acc, ...newTasks].flat();
-  }, []);
+const htmlItems = {
+  img: 'src',
+  link: 'href',
+  script: 'src',
 };
-const getCorrectFile = (htmlItems, linkURL, nameNewDir, data) => {
+
+const writeItems = (linkURL, pathNewFile, nameNewDir, data) => {
   const $ = cheerio.load(data);
-  return htmlItems.reduce((acc, htmlItem) => {
-    const tag = htmlItem[0];
-    const attribute = htmlItem[1];
-    const itemFilter = Object.values(acc(tag)).filter((item) => item.attribs);
-    itemFilter.map((item) => {
-      const newURL = new URL(item.attribs[`${attribute}`], linkURL.origin);
-      defaultDebug('new URL %s', newURL);
-      const pathImg = getPathImg(newURL);
-      const nameFilePicture = convertStr(pathImg, /\/|\.(?=.*[.])/g);
-      if (newURL.host !== linkURL.host || !item.attribs[`${attribute}`]) {
-        return '';
-      }
-      acc(`${tag}[${attribute} = "${item.attribs[`${attribute}`]}"]`).attr(`${attribute}`, path.join(nameNewDir, nameFilePicture));
-      return '';
-    });
-    return acc;
-  }, $);
+  const infoTasks = [];
+
+  const tagsWithUrls = $('img, link, script').toArray().filter((element) => {
+    const tag = element.tagName;
+    const attr = htmlItems[tag];
+    const attrValue = element.attribs[attr]
+    return attrValue[0] === '/' || attrValue.includes(linkURL.host);
+  });
+  tagsWithUrls.forEach((item) => {
+    const tag = item.name;
+    const attr = htmlItems[item.name];
+    const pathImg = getPathImg(new URL(item.attribs[attr], linkURL.origin));
+    const namFilePictures = convertStr(pathImg, /\/|\.(?=.*[.])/g);
+    $(`${tag}[${attr} = "${item.attribs[attr]}"]`).attr(`${attr}`, path.join(nameNewDir, namFilePictures));
+    infoTasks.push({ pathFile: path.join(nameNewDir, namFilePictures), linkFile: pathImg });
+  });
+  console.log(infoTasks)
+  return { file: $.html(), tasks: infoTasks };
 };
+
 export const getLogicPicturesDownload = async (link, pathNewFile, nameNewDir, data) => {
   const pathNewDir = path.join(pathNewFile, '..', nameNewDir);
   defaultDebug('newPath %s', pathNewDir);
   return fsp.mkdir(pathNewDir)
     .then(() => {
       const linkURL = new URL(link);
-      const htmlItems = [['img', 'src'], ['link', 'href'], ['script', 'src']];
-      const listrTasks = writeItems(htmlItems, linkURL, pathNewFile, nameNewDir, data);
-      const correctFile = getCorrectFile(htmlItems, linkURL, nameNewDir, data).html();
-      const newListr = new Listr(listrTasks, { concurrent: true });
+      const { file, tasks } = writeItems(linkURL, pathNewFile, nameNewDir, data);
+      const updateTasks = tasks.map(({ pathFile, linkFile }) => ({
+        title: `${linkFile}`,
+        task: () => axios.get(link, { responseType: 'arraybuffer' })
+          .then(({ data: dataFile }) => fsp.writeFile(pathFile, dataFile, 'utf-8'))
+      }));
+
+      const newListr = new Listr(updateTasks, { concurrent: true });
       return newListr.run()
-        .then(() => fsp.writeFile(pathNewFile, correctFile, 'utf-8'));
+        .then(() => fsp.writeFile(pathNewFile, file.html(), 'utf-8'));
     });
 };
