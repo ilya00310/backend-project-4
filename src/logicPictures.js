@@ -23,7 +23,7 @@ const writeItems = (linkURL, pathNewFile, nameNewDir, data) => {
     const tag = element.tagName;
     const attr = htmlItems[tag];
     const attrValue = element.attribs[attr];
-    return attrValue && (attrValue.includes(linkURL.host) || attrValue.startsWith('/'));
+    return attr && (attrValue.includes(linkURL.host) || attrValue.startsWith('/'));
   });
   tagsWithUrls.forEach((item) => {
     const tag = item.name;
