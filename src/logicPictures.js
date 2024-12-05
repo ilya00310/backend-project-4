@@ -22,8 +22,8 @@ const writeItems = (linkURL, pathNewFile, nameNewDir, data) => {
   const tagsWithUrls = $('img, link, script').toArray().filter((element) => {
     const tag = element.tagName;
     const attr = htmlItems[tag];
-    const attrValue = element.attribs[attr]
-    return attrValue[0] === '/' || attrValue.includes(linkURL.host);
+    const attrValue = element.attribs[attr];
+    return attrValue && (attrValue.includes(linkURL.host) || attrValue.startsWith('/'));
   });
   tagsWithUrls.forEach((item) => {
     const tag = item.name;
@@ -31,9 +31,9 @@ const writeItems = (linkURL, pathNewFile, nameNewDir, data) => {
     const pathImg = getPathImg(new URL(item.attribs[attr], linkURL.origin));
     const namFilePictures = convertStr(pathImg, /\/|\.(?=.*[.])/g);
     $(`${tag}[${attr} = "${item.attribs[attr]}"]`).attr(`${attr}`, path.join(nameNewDir, namFilePictures));
-    infoTasks.push({ pathFile: path.join(nameNewDir, namFilePictures), linkFile: pathImg });
+    const pathFile = path.join(pathNewFile, '..', nameNewDir, namFilePictures);
+    infoTasks.push({ pathFile, linkFile: pathImg });
   });
-  console.log(infoTasks)
   return { file: $.html(), tasks: infoTasks };
 };
 
@@ -47,11 +47,10 @@ export const getLogicPicturesDownload = async (link, pathNewFile, nameNewDir, da
       const updateTasks = tasks.map(({ pathFile, linkFile }) => ({
         title: `${linkFile}`,
         task: () => axios.get(link, { responseType: 'arraybuffer' })
-          .then(({ data: dataFile }) => fsp.writeFile(pathFile, dataFile, 'utf-8'))
+          .then(({ data: dataFile }) => fsp.writeFile(pathFile, dataFile, 'utf-8')),
       }));
-
       const newListr = new Listr(updateTasks, { concurrent: true });
       return newListr.run()
-        .then(() => fsp.writeFile(pathNewFile, file.html(), 'utf-8'));
+        .then(() => fsp.writeFile(pathNewFile, file, 'utf-8'));
     });
 };
