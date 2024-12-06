@@ -23,7 +23,7 @@ const writeItems = (linkURL, pathNewFile, nameNewDir, data) => {
     const tag = element.tagName;
     const attr = htmlItems[tag];
     const attrValue = element.attribs[attr];
-    return attr && (attrValue.includes(linkURL.host) || attrValue.startsWith('/'));
+    return attrValue && (attrValue.startsWith('/') || attrValue.includes(linkURL.host));
   });
   tagsWithUrls.forEach((item) => {
     const tag = item.name;
@@ -47,7 +47,11 @@ export const getLogicPicturesDownload = async (link, pathNewFile, nameNewDir, da
       const updateTasks = tasks.map(({ pathFile, linkFile }) => ({
         title: `${linkFile}`,
         task: () => axios.get(link, { responseType: 'arraybuffer' })
-          .then(({ data: dataFile }) => fsp.writeFile(pathFile, dataFile, 'utf-8')),
+          .then(({ data: dataFile }) => {
+            console.log(pathFile, dataFile)
+            return fsp.writeFile(pathFile, dataFile, 'utf-8')
+          }),
+
       }));
       const newListr = new Listr(updateTasks, { concurrent: true });
       return newListr.run()
