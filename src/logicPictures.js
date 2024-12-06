@@ -47,10 +47,7 @@ export const getLogicPicturesDownload = async (link, pathNewFile, nameNewDir, da
       const updateTasks = tasks.map(({ pathFile, linkFile }) => ({
         title: `${linkFile}`,
         task: () => axios.get(link, { responseType: 'arraybuffer' })
-          .then(({ data: dataFile }) => {
-            console.log(pathFile, dataFile)
-            return fsp.writeFile(pathFile, dataFile, 'utf-8')
-          }),
+          .then((loadImg) => fsp.writeFile(pathFile, loadImg.data, 'utf-8')),
 
       }));
       const newListr = new Listr(updateTasks, { concurrent: true });
