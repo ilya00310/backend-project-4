@@ -8,7 +8,6 @@ import getGeneralLogic from '../index.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const getFixturePath = (fileName) => path.resolve(__dirname, '..', '__fixtures__', fileName);
 
-nock.disableNetConnect();
 let currentPath;
 const link = 'https://ru.hexlet.io/courses';
 nock(/ru\.hexlet\.io/).persist()
