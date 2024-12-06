@@ -46,7 +46,7 @@ export const getLogicPicturesDownload = async (link, pathNewFile, nameNewDir, da
       const linkURL = new URL(link);
       const { file, tasks } = writeItems(linkURL, pathNewFile, nameNewDir, data);
       const updateTasks = tasks.map(({ pathFile, linkFile }) => ({
-        title: `${linkFile}`,
+        title: linkFile,
         task: () => axios.get(linkFile, { responseType: 'arraybuffer' })
           .then(({ data: dataFile }) => fsp.writeFile(pathFile, dataFile, 'utf-8')),
 
